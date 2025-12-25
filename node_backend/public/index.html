@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translation Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .clear-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .clear-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .language-selector {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .lang-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .lang-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    .lang-group select {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .lang-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .messages-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .message {
+      margin-bottom: 16px;
+      display: flex;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.bot {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot .message-bubble {
+      background: white;
+      color: #333;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .message-text {
+      font-size: 15px;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .message-time {
+      font-size: 11px;
+      opacity: 0.7;
+      text-align: right;
+    }
+
+    .message.bot .message-time {
+      color: #666;
+    }
+
+    .copy-btn {
+      background: rgba(0, 0, 0, 0.1);
+      border: none;
+      color: inherit;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      margin-top: 4px;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .loading {
+      display: none;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 70%;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      background: #667eea;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading-dots span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0);
+      }
+
+      40% {
+        transform: scale(1);
+      }
+    }
+
+    .input-container {
+      background: white;
+      padding: 20px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-container textarea {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 24px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      max-height: 120px;
+      transition: all 0.3s;
+    }
+
+    .input-container textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .send-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .send-btn:active {
+      transform: translateY(0);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #999;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-subtext {
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .language-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .lang-group {
+        width: 100%;
+      }
+
+      .message-bubble {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+      <h1>🌐 Translation Chat</h1>
+      <button class="clear-btn" onclick="clearHistory()">🗑️ Clear</button>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+      <div class="lang-group">
+        <label for="source_lang">From:</label>
+        <select id="source_lang">
+          <option value="auto">Auto-detect</option>
+          <option value="English">English</option>
+          <option value="Spanish">Spanish (Español)</option>
+          <option value="French">French (Français)</option>
+          <option value="German">German (Deutsch)</option>
+          <option value="Italian">Italian (Italiano)</option>
+          <option value="Portuguese">Portuguese (Português)</option>
+          <option value="Russian">Russian (Русский)</option>
+          <option value="Chinese (Simplified)">Chinese Simplified (简体中文)</option>
+          <option value="Chinese (Traditional)">Chinese Traditional (繁體中文)</option>
+          <option value="Japanese">Japanese (日本語)</option>
+          <option value="Korean">Korean (한국어)</option>
+          <option value="Arabic">Arabic (العربية)</option>
+          <option value="Hindi">Hindi (हिन्दी)</option>
+          <option value="Bengali">Bengali (বাংলা)</option>
+          <option value="Urdu">Urdu (اردو)</option>
+          <option value="Turkish">Turkish (Türkçe)</option>
+          <option value="Persian">Persian (فارسی)</option>
+          <option value="Vietnamese">Vietnamese (Tiếng Việt)</option>
+          <option value="Thai">Thai (ไทย)</option>
+          <option value="Indonesian">Indonesian (Bahasa Indonesia)</option>
+          <option value="Malay">Malay (Bahasa Melayu)</option>
+          <option value="Filipino">Filipino (Tagalog)</option>
+          <option value="Uzbek">Uzbek (O'zbek)</option>
+          <option value="Kazakh">Kazakh (Қазақ)</option>
+          <option value="Kyrgyz">Kyrgyz (Кыргыз)</option>
+          <option value="Tajik">Tajik (Тоҷикӣ)</option>
+          <option value="Turkmen">Turkmen (Türkmen)</option>
+          <option value="Azerbaijani">Azerbaijani (Azərbaycan)</option>
+          <option value="Polish">Polish (Polski)</option>
+          <option value="Ukrainian">Ukrainian (Українська)</option>
+          <option value="Czech">Czech (Čeština)</option>
+          <option value="Romanian">Romanian (Română)</option>
+          <option value="Dutch">Dutch (Nederlands)</option>
+          <option value="Greek">Greek (Ελληνικά)</option>
+          <option value="Swedish">Swedish (Svenska)</option>
+          <option value="Norwegian">Norwegian (Norsk)</option>
+          <option value="Danish">Danish (Dansk)</option>
+          <option value="Finnish">Finnish (Suomi)</option>
+          <option value="Hungarian">Hungarian (Magyar)</option>
+          <option value="Bulgarian">Bulgarian (Български)</option>
+          <option value="Serbian">Serbian (Српски)</option>
+          <option value="Croatian">Croatian (Hrvatski)</option>
+          <option value="Slovak">Slovak (Slovenčina)</option>
+          <option value="Slovenian">Slovenian (Slovenščina)</option>
+          <option value="Hebrew">Hebrew (עברית)</option>
+          <option value="Swahili">Swahili (Kiswahili)</option>
+          <option value="Amharic">Amharic (አማርኛ)</option>
+          <option value="Hausa">Hausa</option>
+          <option value="Yoruba">Yoruba</option>
+          <option value="Zulu">Zulu (isiZulu)</option>
+          <option value="Afrikaans">Afrikaans</option>
+          <option value="Nepali">Nepali (नेपाली)</option>
+          <option value="Sinhala">Sinhala (සිංහල)</option>
+          <option value="Burmese">Burmese (မြန်မာ)</option>
+          <option value="Khmer">Khmer (ខ្មែរ)</option>
+          <option value="Lao">Lao (ລາວ)</option>
+          <option value="Mongolian">Mongolian (Монгол)</option>
+        </select>
+      </div>
+      <div class="lang-group">
+        <label for="target_lang">To:</label>
+        <select id="target_lang">
+          <option value="English">English</option>
+          <option value="Spanish">Spanish (Español)</option>
+          <option value="French">French (Français)</option>
+          <option value="German">German (Deutsch)</option>
+          <option value="Italian">Italian (Italiano)</option>
+          <option value="Portuguese">Portuguese (Português)</option>
+          <option value="Russian">Russian (Русский)</option>
+          <option value="Chinese (Simplified)">Chinese Simplified (简体中文)</option>
+          <option value="Chinese (Traditional)">Chinese Traditional (繁體中文)</option>
+          <option value="Japanese">Japanese (日本語)</option>
+          <option value="Korean">Korean (한국어)</option>
+          <option value="Arabic">Arabic (العربية)</option>
+          <option value="Hindi">Hindi (हिन्दी)</option>
+          <option value="Bengali">Bengali (বাংলা)</option>
+          <option value="Urdu">Urdu (اردو)</option>
+          <option value="Turkish">Turkish (Türkçe)</option>
+          <option value="Persian">Persian (فارسی)</option>
+          <option value="Vietnamese">Vietnamese (Tiếng Việt)</option>
+          <option value="Thai">Thai (ไทย)</option>
+          <option value="Indonesian">Indonesian (Bahasa Indonesia)</option>
+          <option value="Malay">Malay (Bahasa Melayu)</option>
+          <option value="Filipino">Filipino (Tagalog)</option>
+          <option value="Uzbek">Uzbek (O'zbek)</option>
+          <option value="Kazakh">Kazakh (Қазақ)</option>
+          <option value="Kyrgyz">Kyrgyz (Кыргыз)</option>
+          <option value="Tajik">Tajik (Тоҷикӣ)</option>
+          <option value="Turkmen">Turkmen (Türkmen)</option>
+          <option value="Azerbaijani">Azerbaijani (Azərbaycan)</option>
+          <option value="Polish">Polish (Polski)</option>
+          <option value="Ukrainian">Ukrainian (Українська)</option>
+          <option value="Czech">Czech (Čeština)</option>
+          <option value="Romanian">Romanian (Română)</option>
+          <option value="Dutch">Dutch (Nederlands)</option>
+          <option value="Greek">Greek (Ελληνικά)</option>
+          <option value="Swedish">Swedish (Svenska)</option>
+          <option value="Norwegian">Norwegian (Norsk)</option>
+          <option value="Danish">Danish (Dansk)</option>
+          <option value="Finnish">Finnish (Suomi)</option>
+          <option value="Hungarian">Hungarian (Magyar)</option>
+          <option value="Bulgarian">Bulgarian (Български)</option>
+          <option value="Serbian">Serbian (Српски)</option>
+          <option value="Croatian">Croatian (Hrvatski)</option>
+          <option value="Slovak">Slovak (Slovenčina)</option>
+          <option value="Slovenian">Slovenian (Slovenščina)</option>
+          <option value="Hebrew">Hebrew (עברית)</option>
+          <option value="Swahili">Swahili (Kiswahili)</option>
+          <option value="Amharic">Amharic (አማርኛ)</option>
+          <option value="Hausa">Hausa</option>
+          <option value="Yoruba">Yoruba</option>
+          <option value="Zulu">Zulu (isiZulu)</option>
+          <option value="Afrikaans">Afrikaans</option>
+          <option value="Nepali">Nepali (नेपाली)</option>
+          <option value="Sinhala">Sinhala (සිංහල)</option>
+          <option value="Burmese">Burmese (မြန်မာ)</option>
+          <option value="Khmer">Khmer (ខ្មែរ)</option>
+          <option value="Lao">Lao (ລາວ)</option>
+          <option value="Mongolian">Mongolian (Монгол)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Messages Container -->
+    <div class="messages-container" id="messagesContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <div class="empty-state-text">Start a conversation</div>
+        <div class="empty-state-subtext">Type a message to translate</div>
+      </div>
+      <div class="loading" id="loadingIndicator">
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Container -->
+    <div class="input-container">
+      <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <span>Send</span>
+        <span>📤</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let messageHistory = [];
+
+    // Auto-resize textarea
+    const textarea = document.getElementById('messageInput');
+    textarea.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Enter to send (Shift+Enter for new line)
+    textarea.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const text = textarea.value.trim();
+      if (!text) return;
+
+      const sourceLang = document.getElementById('source_lang').value;
+      const targetLang = document.getElementById('target_lang').value;
+      const sendBtn = document.getElementById('sendBtn');
+      const messagesContainer = document.getElementById('messagesContainer');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+
+      // Hide empty state
+      const emptyState = messagesContainer.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      // Add user message
+      addMessage('user', text);
+
+      // Clear input
+      textarea.value = '';
+      textarea.style.height = 'auto';
+
+      // Disable send button and show loading
+      sendBtn.disabled = true;
+      loadingIndicator.classList.add('active');
+      scrollToBottom();
+
+      try {
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            source_lang: sourceLang,
+            target_lang: targetLang
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          addMessage('bot', `Error: ${data.error}`, true);
+        } else {
+          addMessage('bot', data.translated);
+        }
+      } catch (error) {
+        addMessage('bot', `Connection error: ${error.message}`, true);
+      } finally {
+        sendBtn.disabled = false;
+        loadingIndicator.classList.remove('active');
+        scrollToBottom();
+      }
+    }
+
+    function addMessage(type, text, isError = false) {
+      const messagesContainer = document.getElementById('messagesContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      if (isError) {
+        bubble.style.background = '#ffebee';
+        bubble.style.color = '#c62828';
+      }
+
+      const messageText = document.createElement('div');
+      messageText.className = 'message-text';
+      messageText.textContent = text;
+
+      const messageTime = document.createElement('div');
+      messageTime.className = 'message-time';
+      messageTime.textContent = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      bubble.appendChild(messageText);
+
+      // Add copy button for bot messages
+      if (type === 'bot' && !isError) {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.onclick = () => copyToClipboard(text, copyBtn);
+        bubble.appendChild(copyBtn);
+      }
+
+      bubble.appendChild(messageTime);
+      messageDiv.appendChild(bubble);
+      messagesContainer.appendChild(messageDiv);
+
+      // Save to history
+      messageHistory.push({ type, text, timestamp: new Date().toISOString() });
+
+      scrollToBottom();
+    }
+
+    function copyToClipboard(text, button) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    function scrollToBottom() {
+      const messagesContainer = document.getElementById('messagesContainer');
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function clearHistory() {
+      if (confirm('Clear all messages?')) {
+        const messagesContainer = document.getElementById('messagesContainer');
+        messagesContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div class="empty-state-text">Start a conversation</div>
+            <div class="empty-state-subtext">Type a message to translate</div>
+          </div>
+          <div class="loading" id="loadingIndicator">
+            <div class="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        `;
+        messageHistory = [];
+      }
+    }
+
+    // Focus input on load
+    window.addEventListener('load', () => {
+      textarea.focus();
+    });
+  </script>
+</body>
+
+</html>
