@@ -2,7 +2,7 @@
 
 Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtomatik tarjima qilinadigan chat tizimidir.
 
-![Demo](https://via.placeholder.com/800x400?text=Real-Time+Translation+Chat+Demo)
+![Demo](https://drive.google.com/file/d/1qUSfXHBmUwbEnXwBPeWfCzSYmE-PGj89/view?usp=drive_link)
 
 ## 🏗️ Arxitektura
 
