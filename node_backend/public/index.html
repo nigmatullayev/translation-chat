@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Translation Chat</title>
+  <title>Real-Time Translation Chat</title>
   <style>
     * {
       margin: 0;
@@ -38,58 +38,85 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 20px;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header-info {
+      font-size: 14px;
+      opacity: 0.9;
       display: flex;
-      justify-content: space-between;
+      gap: 20px;
       align-items: center;
     }
 
-    .chat-header h1 {
-      font-size: 24px;
-      font-weight: 600;
-    }
-
-    .clear-btn {
+    .language-badge {
       background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 13px;
     }
 
-    .clear-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .status-dot.waiting {
+      background: #ff9800;
+    }
+
+    .status-dot.offline {
+      background: #f44336;
     }
 
     .language-selector {
       background: #f8f9fa;
-      padding: 15px 20px;
-      display: flex;
-      gap: 15px;
-      align-items: center;
+      padding: 20px;
       border-bottom: 1px solid #e0e0e0;
     }
 
     .lang-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex: 1;
+      gap: 12px;
     }
 
     .lang-group label {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       color: #555;
-      white-space: nowrap;
+      min-width: 120px;
     }
 
     .lang-group select {
       flex: 1;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       font-size: 14px;
@@ -101,6 +128,31 @@
     .lang-group select:focus {
       outline: none;
       border-color: #667eea;
+    }
+
+    .join-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .join-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .join-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .messages-container {
@@ -123,13 +175,29 @@
       border-radius: 4px;
     }
 
-    .messages-container::-webkit-scrollbar-thumb:hover {
-      background: #555;
+    .waiting-message {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .waiting-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .waiting-text {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .waiting-subtext {
+      font-size: 14px;
+      color: #bbb;
     }
 
     .message {
-      margin-bottom: 16px;
-      display: flex;
+      margin-bottom: 20px;
       animation: slideIn 0.3s ease-out;
     }
 
@@ -145,87 +213,85 @@
       }
     }
 
-    .message.user {
-      justify-content: flex-end;
+    .message.sent {
+      text-align: right;
     }
 
-    .message.bot {
-      justify-content: flex-start;
+    .message.received {
+      text-align: left;
+    }
+
+    .message-content {
+      display: inline-block;
+      max-width: 70%;
+      text-align: left;
     }
 
     .message-bubble {
-      max-width: 70%;
       padding: 12px 16px;
       border-radius: 18px;
-      position: relative;
+      margin-bottom: 4px;
       word-wrap: break-word;
     }
 
-    .message.user .message-bubble {
+    .message.sent .message-bubble.original {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border-bottom-right-radius: 4px;
     }
 
-    .message.bot .message-bubble {
+    .message.sent .message-bubble.translated {
+      background: rgba(102, 126, 234, 0.2);
+      color: #333;
+      border-bottom-right-radius: 4px;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .message.received .message-bubble.original {
+      background: white;
+      color: #333;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 13px;
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    .message.received .message-bubble.translated {
       background: white;
       color: #333;
       border-bottom-left-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .message-text {
-      font-size: 15px;
-      line-height: 1.4;
-      margin-bottom: 4px;
-    }
-
     .message-time {
       font-size: 11px;
-      opacity: 0.7;
-      text-align: right;
-    }
-
-    .message.bot .message-time {
-      color: #666;
-    }
-
-    .copy-btn {
-      background: rgba(0, 0, 0, 0.1);
-      border: none;
-      color: inherit;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
+      opacity: 0.6;
       margin-top: 4px;
-      transition: all 0.2s;
     }
 
-    .copy-btn:hover {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .loading {
+    .typing-indicator {
       display: none;
       padding: 12px 16px;
       background: white;
       border-radius: 18px;
       border-bottom-left-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      max-width: 70%;
+      max-width: 70px;
+      margin-bottom: 16px;
     }
 
-    .loading.active {
-      display: block;
+    .typing-indicator.active {
+      display: inline-block;
     }
 
-    .loading-dots {
+    .typing-dots {
       display: flex;
       gap: 4px;
     }
 
-    .loading-dots span {
+    .typing-dots span {
       width: 8px;
       height: 8px;
       background: #667eea;
@@ -233,11 +299,11 @@
       animation: bounce 1.4s infinite ease-in-out both;
     }
 
-    .loading-dots span:nth-child(1) {
+    .typing-dots span:nth-child(1) {
       animation-delay: -0.32s;
     }
 
-    .loading-dots span:nth-child(2) {
+    .typing-dots span:nth-child(2) {
       animation-delay: -0.16s;
     }
 
@@ -260,6 +326,11 @@
       border-top: 1px solid #e0e0e0;
       display: flex;
       gap: 12px;
+    }
+
+    .input-container.disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
 
     .input-container textarea {
@@ -299,40 +370,10 @@
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
-    .send-btn:active {
-      transform: translateY(0);
-    }
-
     .send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #999;
-      text-align: center;
-      padding: 40px;
-    }
-
-    .empty-state-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-    }
-
-    .empty-state-text {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-
-    .empty-state-subtext {
-      font-size: 14px;
-      color: #bbb;
     }
 
     @media (max-width: 768px) {
@@ -341,17 +382,10 @@
         border-radius: 0;
       }
 
-      .language-selector {
+      .header-info {
         flex-direction: column;
-        gap: 10px;
-      }
-
-      .lang-group {
-        width: 100%;
-      }
-
-      .message-bubble {
-        max-width: 85%;
+        gap: 8px;
+        align-items: flex-start;
       }
     }
   </style>
@@ -361,148 +395,50 @@
   <div class="chat-container">
     <!-- Header -->
     <div class="chat-header">
-      <h1>🌐 Translation Chat</h1>
-      <button class="clear-btn" onclick="clearHistory()">🗑️ Clear</button>
+      <div class="header-title">🌐 Real-Time Translation Chat</div>
+      <div class="header-info">
+        <div class="language-badge" id="yourLanguage">Your Language: -</div>
+        <div class="status-indicator">
+          <div class="status-dot waiting" id="statusDot"></div>
+          <span id="statusText">Not connected</span>
+        </div>
+        <div class="language-badge" id="partnerLanguage" style="display: none;">Partner: -</div>
+      </div>
     </div>
 
     <!-- Language Selector -->
-    <div class="language-selector">
+    <div class="language-selector" id="languageSelector">
       <div class="lang-group">
-        <label for="source_lang">From:</label>
-        <select id="source_lang">
-          <option value="auto">Auto-detect</option>
+        <label for="userLanguage">Choose your language:</label>
+        <select id="userLanguage">
           <option value="English">English</option>
           <option value="Spanish">Spanish (Español)</option>
           <option value="French">French (Français)</option>
           <option value="German">German (Deutsch)</option>
-          <option value="Italian">Italian (Italiano)</option>
-          <option value="Portuguese">Portuguese (Português)</option>
           <option value="Russian">Russian (Русский)</option>
-          <option value="Chinese (Simplified)">Chinese Simplified (简体中文)</option>
-          <option value="Chinese (Traditional)">Chinese Traditional (繁體中文)</option>
+          <option value="Chinese (Simplified)">Chinese (简体中文)</option>
           <option value="Japanese">Japanese (日本語)</option>
           <option value="Korean">Korean (한국어)</option>
           <option value="Arabic">Arabic (العربية)</option>
-          <option value="Hindi">Hindi (हिन्दी)</option>
-          <option value="Bengali">Bengali (বাংলা)</option>
-          <option value="Urdu">Urdu (اردو)</option>
           <option value="Turkish">Turkish (Türkçe)</option>
-          <option value="Persian">Persian (فارسی)</option>
-          <option value="Vietnamese">Vietnamese (Tiếng Việt)</option>
-          <option value="Thai">Thai (ไทย)</option>
-          <option value="Indonesian">Indonesian (Bahasa Indonesia)</option>
-          <option value="Malay">Malay (Bahasa Melayu)</option>
-          <option value="Filipino">Filipino (Tagalog)</option>
           <option value="Uzbek">Uzbek (O'zbek)</option>
-          <option value="Kazakh">Kazakh (Қазақ)</option>
-          <option value="Kyrgyz">Kyrgyz (Кыргыз)</option>
-          <option value="Tajik">Tajik (Тоҷикӣ)</option>
-          <option value="Turkmen">Turkmen (Türkmen)</option>
-          <option value="Azerbaijani">Azerbaijani (Azərbaycan)</option>
-          <option value="Polish">Polish (Polski)</option>
-          <option value="Ukrainian">Ukrainian (Українська)</option>
-          <option value="Czech">Czech (Čeština)</option>
-          <option value="Romanian">Romanian (Română)</option>
-          <option value="Dutch">Dutch (Nederlands)</option>
-          <option value="Greek">Greek (Ελληνικά)</option>
-          <option value="Swedish">Swedish (Svenska)</option>
-          <option value="Norwegian">Norwegian (Norsk)</option>
-          <option value="Danish">Danish (Dansk)</option>
-          <option value="Finnish">Finnish (Suomi)</option>
-          <option value="Hungarian">Hungarian (Magyar)</option>
-          <option value="Bulgarian">Bulgarian (Български)</option>
-          <option value="Serbian">Serbian (Српски)</option>
-          <option value="Croatian">Croatian (Hrvatski)</option>
-          <option value="Slovak">Slovak (Slovenčina)</option>
-          <option value="Slovenian">Slovenian (Slovenščina)</option>
-          <option value="Hebrew">Hebrew (עברית)</option>
-          <option value="Swahili">Swahili (Kiswahili)</option>
-          <option value="Amharic">Amharic (አማርኛ)</option>
-          <option value="Hausa">Hausa</option>
-          <option value="Yoruba">Yoruba</option>
-          <option value="Zulu">Zulu (isiZulu)</option>
-          <option value="Afrikaans">Afrikaans</option>
-          <option value="Nepali">Nepali (नेपाली)</option>
-          <option value="Sinhala">Sinhala (සිංහල)</option>
-          <option value="Burmese">Burmese (မြန်မာ)</option>
-          <option value="Khmer">Khmer (ខ្មែរ)</option>
-          <option value="Lao">Lao (ລາວ)</option>
-          <option value="Mongolian">Mongolian (Монгол)</option>
-        </select>
-      </div>
-      <div class="lang-group">
-        <label for="target_lang">To:</label>
-        <select id="target_lang">
-          <option value="English">English</option>
-          <option value="Spanish">Spanish (Español)</option>
-          <option value="French">French (Français)</option>
-          <option value="German">German (Deutsch)</option>
-          <option value="Italian">Italian (Italiano)</option>
+          <option value="Hindi">Hindi (हिन्दी)</option>
           <option value="Portuguese">Portuguese (Português)</option>
-          <option value="Russian">Russian (Русский)</option>
-          <option value="Chinese (Simplified)">Chinese Simplified (简体中文)</option>
-          <option value="Chinese (Traditional)">Chinese Traditional (繁體中文)</option>
-          <option value="Japanese">Japanese (日本語)</option>
-          <option value="Korean">Korean (한국어)</option>
-          <option value="Arabic">Arabic (العربية)</option>
-          <option value="Hindi">Hindi (हिन्दी)</option>
-          <option value="Bengali">Bengali (বাংলা)</option>
-          <option value="Urdu">Urdu (اردو)</option>
-          <option value="Turkish">Turkish (Türkçe)</option>
-          <option value="Persian">Persian (فارسی)</option>
-          <option value="Vietnamese">Vietnamese (Tiếng Việt)</option>
-          <option value="Thai">Thai (ไทย)</option>
-          <option value="Indonesian">Indonesian (Bahasa Indonesia)</option>
-          <option value="Malay">Malay (Bahasa Melayu)</option>
-          <option value="Filipino">Filipino (Tagalog)</option>
-          <option value="Uzbek">Uzbek (O'zbek)</option>
-          <option value="Kazakh">Kazakh (Қазақ)</option>
-          <option value="Kyrgyz">Kyrgyz (Кыргыз)</option>
-          <option value="Tajik">Tajik (Тоҷикӣ)</option>
-          <option value="Turkmen">Turkmen (Türkmen)</option>
-          <option value="Azerbaijani">Azerbaijani (Azərbaycan)</option>
-          <option value="Polish">Polish (Polski)</option>
-          <option value="Ukrainian">Ukrainian (Українська)</option>
-          <option value="Czech">Czech (Čeština)</option>
-          <option value="Romanian">Romanian (Română)</option>
-          <option value="Dutch">Dutch (Nederlands)</option>
-          <option value="Greek">Greek (Ελληνικά)</option>
-          <option value="Swedish">Swedish (Svenska)</option>
-          <option value="Norwegian">Norwegian (Norsk)</option>
-          <option value="Danish">Danish (Dansk)</option>
-          <option value="Finnish">Finnish (Suomi)</option>
-          <option value="Hungarian">Hungarian (Magyar)</option>
-          <option value="Bulgarian">Bulgarian (Български)</option>
-          <option value="Serbian">Serbian (Српски)</option>
-          <option value="Croatian">Croatian (Hrvatski)</option>
-          <option value="Slovak">Slovak (Slovenčina)</option>
-          <option value="Slovenian">Slovenian (Slovenščina)</option>
-          <option value="Hebrew">Hebrew (עברית)</option>
-          <option value="Swahili">Swahili (Kiswahili)</option>
-          <option value="Amharic">Amharic (አማርኛ)</option>
-          <option value="Hausa">Hausa</option>
-          <option value="Yoruba">Yoruba</option>
-          <option value="Zulu">Zulu (isiZulu)</option>
-          <option value="Afrikaans">Afrikaans</option>
-          <option value="Nepali">Nepali (नेपाली)</option>
-          <option value="Sinhala">Sinhala (සිංහල)</option>
-          <option value="Burmese">Burmese (မြန်မာ)</option>
-          <option value="Khmer">Khmer (ខ្មែរ)</option>
-          <option value="Lao">Lao (ລາວ)</option>
-          <option value="Mongolian">Mongolian (Монгол)</option>
+          <option value="Italian">Italian (Italiano)</option>
         </select>
       </div>
+      <button class="join-btn" onclick="joinChat()">Join Chat</button>
     </div>
 
     <!-- Messages Container -->
     <div class="messages-container" id="messagesContainer">
-      <div class="empty-state">
-        <div class="empty-state-icon">💬</div>
-        <div class="empty-state-text">Start a conversation</div>
-        <div class="empty-state-subtext">Type a message to translate</div>
+      <div class="waiting-message">
+        <div class="waiting-icon">💬</div>
+        <div class="waiting-text">Select your language and join</div>
+        <div class="waiting-subtext">You'll be paired with another user automatically</div>
       </div>
-      <div class="loading" id="loadingIndicator">
-        <div class="loading-dots">
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
           <span></span>
           <span></span>
           <span></span>
@@ -511,7 +447,7 @@
     </div>
 
     <!-- Input Container -->
-    <div class="input-container">
+    <div class="input-container disabled" id="inputContainer">
       <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMessage()">
         <span>Send</span>
@@ -520,162 +456,181 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    let messageHistory = [];
+    const socket = io();
+    let isConnected = false;
+    let typingTimeout = null;
+
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageInput = document.getElementById('messageInput');
+    const inputContainer = document.getElementById('inputContainer');
+    const languageSelector = document.getElementById('languageSelector');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const yourLanguage = document.getElementById('yourLanguage');
+    const partnerLanguage = document.getElementById('partnerLanguage');
+    const typingIndicator = document.getElementById('typingIndicator');
 
     // Auto-resize textarea
-    const textarea = document.getElementById('messageInput');
-    textarea.addEventListener('input', function () {
+    messageInput.addEventListener('input', function () {
       this.style.height = 'auto';
       this.style.height = (this.scrollHeight) + 'px';
     });
 
-    // Enter to send (Shift+Enter for new line)
-    textarea.addEventListener('keydown', function (event) {
+    // Enter to send
+    messageInput.addEventListener('keydown', function (event) {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         sendMessage();
       }
     });
 
-    async function sendMessage() {
-      const text = textarea.value.trim();
-      if (!text) return;
+    // Typing indicator
+    messageInput.addEventListener('input', function () {
+      if (!isConnected) return;
 
-      const sourceLang = document.getElementById('source_lang').value;
-      const targetLang = document.getElementById('target_lang').value;
-      const sendBtn = document.getElementById('sendBtn');
-      const messagesContainer = document.getElementById('messagesContainer');
-      const loadingIndicator = document.getElementById('loadingIndicator');
+      socket.emit('typing');
 
-      // Hide empty state
-      const emptyState = messagesContainer.querySelector('.empty-state');
-      if (emptyState) {
-        emptyState.style.display = 'none';
-      }
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.emit('stop-typing');
+      }, 1000);
+    });
 
-      // Add user message
-      addMessage('user', text);
+    function joinChat() {
+      const language = document.getElementById('userLanguage').value;
 
-      // Clear input
-      textarea.value = '';
-      textarea.style.height = 'auto';
+      socket.emit('join-chat', { language });
 
-      // Disable send button and show loading
-      sendBtn.disabled = true;
-      loadingIndicator.classList.add('active');
-      scrollToBottom();
-
-      try {
-        const response = await fetch('/api/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text,
-            source_lang: sourceLang,
-            target_lang: targetLang
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-          addMessage('bot', `Error: ${data.error}`, true);
-        } else {
-          addMessage('bot', data.translated);
-        }
-      } catch (error) {
-        addMessage('bot', `Connection error: ${error.message}`, true);
-      } finally {
-        sendBtn.disabled = false;
-        loadingIndicator.classList.remove('active');
-        scrollToBottom();
-      }
+      languageSelector.style.display = 'none';
+      yourLanguage.textContent = `You: ${language}`;
+      statusText.textContent = 'Waiting for partner...';
     }
 
-    function addMessage(type, text, isError = false) {
-      const messagesContainer = document.getElementById('messagesContainer');
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message || !isConnected) return;
+
+      socket.emit('send-message', { message });
+
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+    }
+
+    function addMessage(type, original, translated, timestamp) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${type}`;
 
-      const bubble = document.createElement('div');
-      bubble.className = 'message-bubble';
-      if (isError) {
-        bubble.style.background = '#ffebee';
-        bubble.style.color = '#c62828';
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+
+      if (type === 'sent') {
+        // Show original first, then translated
+        const originalBubble = document.createElement('div');
+        originalBubble.className = 'message-bubble original';
+        originalBubble.textContent = original;
+        contentDiv.appendChild(originalBubble);
+
+        const translatedBubble = document.createElement('div');
+        translatedBubble.className = 'message-bubble translated';
+        translatedBubble.textContent = `→ ${translated}`;
+        contentDiv.appendChild(translatedBubble);
+      } else {
+        // Show translated first, then original
+        const translatedBubble = document.createElement('div');
+        translatedBubble.className = 'message-bubble translated';
+        translatedBubble.textContent = translated;
+        contentDiv.appendChild(translatedBubble);
+
+        const originalBubble = document.createElement('div');
+        originalBubble.className = 'message-bubble original';
+        originalBubble.textContent = `(${original})`;
+        contentDiv.appendChild(originalBubble);
       }
 
-      const messageText = document.createElement('div');
-      messageText.className = 'message-text';
-      messageText.textContent = text;
-
-      const messageTime = document.createElement('div');
-      messageTime.className = 'message-time';
-      messageTime.textContent = new Date().toLocaleTimeString('en-US', {
+      const timeDiv = document.createElement('div');
+      timeDiv.className = 'message-time';
+      timeDiv.textContent = new Date(timestamp).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
+      contentDiv.appendChild(timeDiv);
 
-      bubble.appendChild(messageText);
+      messageDiv.appendChild(contentDiv);
 
-      // Add copy button for bot messages
-      if (type === 'bot' && !isError) {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn';
-        copyBtn.textContent = '📋 Copy';
-        copyBtn.onclick = () => copyToClipboard(text, copyBtn);
-        bubble.appendChild(copyBtn);
-      }
-
-      bubble.appendChild(messageTime);
-      messageDiv.appendChild(bubble);
-      messagesContainer.appendChild(messageDiv);
-
-      // Save to history
-      messageHistory.push({ type, text, timestamp: new Date().toISOString() });
-
+      // Insert before typing indicator
+      messagesContainer.insertBefore(messageDiv, typingIndicator);
       scrollToBottom();
     }
 
-    function copyToClipboard(text, button) {
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = button.textContent;
-        button.textContent = '✅ Copied!';
-        setTimeout(() => {
-          button.textContent = originalText;
-        }, 2000);
-      });
-    }
-
     function scrollToBottom() {
-      const messagesContainer = document.getElementById('messagesContainer');
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    function clearHistory() {
-      if (confirm('Clear all messages?')) {
-        const messagesContainer = document.getElementById('messagesContainer');
-        messagesContainer.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">💬</div>
-            <div class="empty-state-text">Start a conversation</div>
-            <div class="empty-state-subtext">Type a message to translate</div>
-          </div>
-          <div class="loading" id="loadingIndicator">
-            <div class="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        `;
-        messageHistory = [];
+    function clearWaitingMessage() {
+      const waitingMsg = messagesContainer.querySelector('.waiting-message');
+      if (waitingMsg) {
+        waitingMsg.remove();
       }
     }
 
-    // Focus input on load
-    window.addEventListener('load', () => {
-      textarea.focus();
+    // Socket events
+    socket.on('room-joined', (data) => {
+      console.log('Joined room:', data.roomId);
+    });
+
+    socket.on('waiting-for-partner', () => {
+      statusDot.className = 'status-dot waiting';
+      statusText.textContent = 'Waiting for partner...';
+    });
+
+    socket.on('partner-joined', (data) => {
+      isConnected = true;
+      clearWaitingMessage();
+
+      statusDot.className = 'status-dot';
+      statusText.textContent = 'Connected';
+      partnerLanguage.textContent = `Partner: ${data.partnerLanguage}`;
+      partnerLanguage.style.display = 'block';
+
+      inputContainer.classList.remove('disabled');
+      messageInput.focus();
+    });
+
+    socket.on('message-sent', (data) => {
+      addMessage('sent', data.original, data.translated, data.timestamp);
+    });
+
+    socket.on('receive-message', (data) => {
+      addMessage('received', data.original, data.translated, data.timestamp);
+    });
+
+    socket.on('partner-typing', () => {
+      typingIndicator.classList.add('active');
+      scrollToBottom();
+    });
+
+    socket.on('partner-stop-typing', () => {
+      typingIndicator.classList.remove('active');
+    });
+
+    socket.on('partner-left', () => {
+      isConnected = false;
+      statusDot.className = 'status-dot offline';
+      statusText.textContent = 'Partner disconnected';
+      inputContainer.classList.add('disabled');
+
+      const systemMsg = document.createElement('div');
+      systemMsg.style.textAlign = 'center';
+      systemMsg.style.padding = '20px';
+      systemMsg.style.color = '#999';
+      systemMsg.textContent = '⚠️ Your partner has left the chat';
+      messagesContainer.insertBefore(systemMsg, typingIndicator);
+    });
+
+    socket.on('error', (data) => {
+      alert('Error: ' + data.message);
     });
   </script>
 </body>

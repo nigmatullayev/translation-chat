@@ -1,27 +1,31 @@
-const express = require("express");
-const axios = require("axios");
-const path = require("path");
+const express = require('express');
+const path = require('path');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const config = require('./src/config');
+const apiRoutes = require('./src/routes/api');
+const { handleSocketConnection } = require('./src/controllers/socketController');
 
+// Initialize Express app
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+
+// Middleware
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static('public'));
 
-app.post("/api/translate", async (req, res) => {
-  try {
-    const { text, source_lang, target_lang } = req.body;
+// API Routes
+app.use('/api', apiRoutes);
 
-    const response = await axios.post("http://localhost:5000/translate", {
-      text,
-      source_lang,
-      target_lang
-    });
-
-    res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: "Translate error" });
-  }
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+  handleSocketConnection(io, socket);
 });
 
-app.listen(3000, () => {
-  console.log("Node.js server running on http://localhost:3000");
+// Start server
+httpServer.listen(config.PORT, () => {
+  console.log(`Server running on http://localhost:${config.PORT}`);
+  console.log(`WebSocket server ready`);
+  console.log(`Environment: ${config.NODE_ENV}`);
 });
