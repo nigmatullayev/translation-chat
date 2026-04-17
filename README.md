@@ -1,114 +1,67 @@
-# 🌐 Real-Time Translation Chat
+🌐 Real-Time AI Translation Chat (Optimized)
+Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtomatik va aqlli tarjima qilinadigan chat tizimidir. Tizim Cerebras AI (Llama 3.1) yordamida nihoyatda tez ishlaydi va SQLite kesh tizimi orqali API xarajatlarini tejaydi.
 
-Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtomatik tarjima qilinadigan chat tizimidir.
-
-![Demo](https://drive.google.com/file/d/1qUSfXHBmUwbEnXwBPeWfCzSYmE-PGj89/view?usp=drive_link)
-
-## 🏗️ Arxitektura
-
+🏗️ Arxitektura va Optimizatsiya
 Tizim uchta asosiy qismdan iborat:
 
-1.  **Backend (Node.js + Socket.io):** WebSocket orqali foydalanuvchilarni ulaydi va xabarlarni almashadi.
-2.  **Translation Service (Python + FastAPI):** Xabarlarni OpenAI yordamida tarjima qiladi.
-3.  **Frontend (HTML/JS):** Foydalanuvchi interfeysi.
+Backend (Node.js + Socket.io): WebSocket orqali xabarlarni real vaqtda yetkazadi.
 
-```mermaid
+Translation Service (Python + FastAPI):
+
+Batch Processing: Xabarlarni 30 talab paketlab tarjima qiladi.
+
+Intelligent Cache: Avval tarjima qilingan matnlarni SQLite bazasidan oladi.
+
+Context Aware: Slang, grammatik xatolar va ismlarni (transliteratsiya) tushunadi.
+
+Frontend (React): IntersectionObserver yordamida foydalanuvchi ko'rayotgan xabarlarni birinchi navbatda tarjima qiladi.
+
+Фрагмент кода
 graph TD
-    A[Frontend User A] <-->|WebSocket| B(Node.js Server)
-    C[Frontend User B] <-->|WebSocket| B
-    B <-->|HTTP POST| D[Python Translation Service]
-    D <-->|API| E[OpenAI]
-```
+    A[React Frontend] <-->|WebSocket| B(Node.js Server)
+    B <-->|HTTP POST /batch| D[Python AI Service]
+    D <-->|Cache Check| E[(SQLite DB)]
+    D <-->|Fast Inference| F[Cerebras AI / Llama 3.1]
+🚀 Tezkor Ishga Tushirish (Automation)
+Loyihani ishga tushirish uchun endi har bir papkaga kirib yurish shart emas. Biz maxsus Python Runner yaratdik.
 
-## 🚀 Ishga Tushirish Qo'llanmasi
+Talablar
+Node.js (v18+)
 
-Loyiha to'liq ishlashi uchun **ikkala** terminalda ham serverlarni ishga tushirishingiz kerak.
+Python (v3.10+)
 
-### Talablar
-- Node.js (v14+)
-- Python (v3.8+)
-- OpenAI API Key
+Cerebras API Key
 
----
+1-qadam: Sozlamalar
+python-translate papkasi ichida .env faylini yarating:
 
-### 1-qadam: Python Translation Service ni Ishga Tushirish 🐍
+Фрагмент кода
+CEREBRAS_API_KEY=csk-sizning-api-kalitingiz
+2-qadam: Birgina buyruq bilan ishga tushirish ⚡
+Loyihaning asosiy papkasida (root) terminalni oching va quyidagilarni bajaring:
 
-Bu servis tarjima uchun javob beradi.
+Bash
+# Faqat birinchi marta (Kutubxonalarni o'rnatish va ishga tushirish uchun):
+python python-translate/run.py
+Ushbu script virtual muhitni yaratadi, barcha kutubxonalarni o'rnatadi va ikkala serverni (Backend & Frontend) alohida terminallarda ochib beradi.
 
-1.  Terminalni oching va `python-translate` papkasiga o'ting:
-    ```bash
-    cd python-translate
-    ```
+🛠️ Texnologiyalar
+Frontend: React.js, Tailwind CSS
 
-2.  Virtual muhit (venv) yarating (agar yo'q bo'lsa):
-    ```bash
-    python -m venv venv
-    ```
+Backend: Node.js, Socket.io
 
-3.  Virtual muhitni faollashtiring:
-    - **Windows:** `venv\Scripts\activate`
-    - **Mac/Linux:** `source venv/bin/activate`
+AI Engine: Python (FastAPI), Cerebras SDK, Llama 3.1-8B
 
-4.  Kerakli kutubxonalarni o'rnating:
-    ```bash
-    pip install fastapi uvicorn openai python-dotenv
-    ```
+Database: SQLite (Kesh uchun)
 
-5.  `.env` fayl yaratib, OpenAI API kalitingizni yozing:
-    ```env
-    OPENAI_API_KEY=sk-sizning-api-kalitingiz
-    ```
+✨ Aqlli Funksiyalar
+Emoji Protection: Emojilar tarjima qilinmaydi va o'z joyida qoladi.
 
-6.  Servisni ishga tushiring:
-    ```bash
-    python translate_service.py
-    ```
-    *Servis `http://localhost:5000` portida ishga tushadi.*
+Name Transliteration: Ismlar tarjima qilinmaydi, lekin maqsadli til alifbosiga o'giriladi (masalan: Komilon -> Комилон).
 
----
+Slang Support: Chatdagi norasmiy so'zlar (nima gap, uzbekmisiz, sps) ma'nosi bo'yicha tarjima qilinadi.
 
-### 2-qadam: Node.js Backend ni Ishga Tushirish 🟢
+Infinite Scroll Prefetch: Foydalanuvchi tepaga skroll qilishidan oldin, fon rejimida eski xabarlar 30 tadan paketlab tarjima qilib qo'yiladi.
 
-Bu server chat va WebSocket ulanishlarini boshqaradi.
-
-1.  **Yangi** terminal oching va `node_backend` papkasiga o'ting:
-    ```bash
-    cd node_backend
-    ```
-
-2.  Kutubxonalarni o'rnating:
-    ```bash
-    npm install
-    ```
-
-3.  Serverni ishga tushiring:
-    ```bash
-    node server.js
-    ```
-    *Server `http://localhost:3000` portida ishga tushadi.*
-
----
-
-### 3-qadam: Chatdan Foydalanish 💬
-
-1.  Brauzerni oching va quyidagi manzilga kiring:
-    👉 **http://localhost:3000**
-
-2.  O'z tilingizni tanlang (masalan, **Uzbek**) va "Join Chat" tugmasini bosing.
-
-3.  Ikkinchi brauzer oynasini (yoki Incognito rejimda) oching va yana **http://localhost:3000** ga kiring.
-
-4.  Boshqa tilni tanlang (masalan, **English**) va "Join Chat" tugmasini bosing.
-
-5.  🎉 Tabriklaymiz! Endi siz bir-biringiz bilan o'z ona tilingizda gaplasha olasiz.
-
----
-
-## 🛠️ Texnologiyalar
-
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Backend:** Node.js, Express, Socket.io
-- **AI Service:** Python, FastAPI, OpenAI GPT-4o-mini
-
-## 📝 Eslatma
-Agar tarjima ishlamasa, Python terminalida xatolik yo'qligini va OpenAI API kaliti to'g'ri ekanligini tekshiring.
+📝 Eslatma
+Agar tarjima bazada noto'g'ri saqlanib qolgan bo'lsa, python-translate/translations_cache.db faylini o'chirib yuboring va serverni qayta yoqing. Tizim avtomatik ravishda toza bazani yaratadi.
