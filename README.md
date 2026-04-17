@@ -1,67 +1,61 @@
-🌐 Real-Time AI Translation Chat (Optimized)
-Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtomatik va aqlli tarjima qilinadigan chat tizimidir. Tizim Cerebras AI (Llama 3.1) yordamida nihoyatda tez ishlaydi va SQLite kesh tizimi orqali API xarajatlarini tejaydi.
+# 🌐 Real-Time AI Translation Chat (Optimized)
 
-🏗️ Arxitektura va Optimizatsiya
-Tizim uchta asosiy qismdan iborat:
+Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtomatik va aqlli tarjima qilinadigan chat tizimidir. Tizim Cerebras AI (Llama 3.1) va SQLite kesh yordamida maksimal darajada optimallashtirilgan.
 
-Backend (Node.js + Socket.io): WebSocket orqali xabarlarni real vaqtda yetkazadi.
+![Demo](https://drive.google.com/file/d/1qUSfXHBmUwbEnXwBPeWfCzSYmE-PGj89/view?usp=drive_link)
 
-Translation Service (Python + FastAPI):
+## 🏗️ Arxitektura
 
-Batch Processing: Xabarlarni 30 talab paketlab tarjima qiladi.
+Loyiha arxitekturasi murakkab bo'lishiga qaramay, uni ishga tushirish uchun bitta Automation Script tayyorlangan.
 
-Intelligent Cache: Avval tarjima qilingan matnlarni SQLite bazasidan oladi.
 
-Context Aware: Slang, grammatik xatolar va ismlarni (transliteratsiya) tushunadi.
-
-Frontend (React): IntersectionObserver yordamida foydalanuvchi ko'rayotgan xabarlarni birinchi navbatda tarjima qiladi.
-
-Фрагмент кода
+```mermaid
 graph TD
     A[React Frontend] <-->|WebSocket| B(Node.js Server)
     B <-->|HTTP POST /batch| D[Python AI Service]
-    D <-->|Cache Check| E[(SQLite DB)]
+    D <-->|Cache Check| E[(SQLite Cache DB)]
     D <-->|Fast Inference| F[Cerebras AI / Llama 3.1]
-🚀 Tezkor Ishga Tushirish (Automation)
-Loyihani ishga tushirish uchun endi har bir papkaga kirib yurish shart emas. Biz maxsus Python Runner yaratdik.
+```
 
-Talablar
-Node.js (v18+)
+## 🚀 Ishga Tushirish Qo'llanmasi
 
-Python (v3.10+)
+Loyiha arxitekturasi murakkab bo'lishiga qaramay, uni ishga tushirish uchun bitta **Automation Script** tayyorlangan.
 
-Cerebras API Key
+### Talablar
+- Node.js (v14+)
+- Python (v3.8+)
+- Cerebras API Key
 
-1-qadam: Sozlamalar
-python-translate papkasi ichida .env faylini yarating:
+---
 
-Фрагмент кода
-CEREBRAS_API_KEY=csk-sizning-api-kalitingiz
-2-qadam: Birgina buyruq bilan ishga tushirish ⚡
-Loyihaning asosiy papkasida (root) terminalni oching va quyidagilarni bajaring:
+### 1-qadam: Sozlamalar 🐍
 
-Bash
-# Faqat birinchi marta (Kutubxonalarni o'rnatish va ishga tushirish uchun):
-python python-translate/run.py
-Ushbu script virtual muhitni yaratadi, barcha kutubxonalarni o'rnatadi va ikkala serverni (Backend & Frontend) alohida terminallarda ochib beradi.
+   python-translate papkasida .env faylini yarating va API kalitingizni kiriting:
+    ```bash
+    CEREBRAS_API_KEY=sk-sizning-api-kalitingiz
+    ```
 
-🛠️ Texnologiyalar
-Frontend: React.js, Tailwind CSS
+### 2-qadam: Hammasini bittada ishga tushirish ⚡
+Loyihaning ildiz (root) papkasida terminalni oching va quyidagi buyruqni bering:
+    ```bash
+    python run.py
+    ```
+Ushbu script virtual muhitni yaratadi, kutubxonalarni o'rnatadi va Frontend hamda Backend terminallarini avtomatik tarzda yangi oynalarda ochib beradi.
 
-Backend: Node.js, Socket.io
+## 🛠️ Aqlli Funksiyalar
+- **🚀 Cerebras Inference:** Llama 3.1-8B modeli yordamida tarjima soniyaning kichik bo'laklarida amalga oshadi.
+- **📦 Batch Translation:** Xabarlar 30 talab paketlanadi, bu API requestlar sonini 30 martagacha tejaydi.
+- **💾 SQLite Cache:** Bir marta tarjima qilingan gap qayta AI ga yuborilmaydi, bazadan olinadi.
+- **🛡️ Emoji Protection:** Emojilar tarjima qilinmaydi va o'z joyida qoladi.
+- **🗣️ Slang & Typos:** Norasmiy matnlar (nima gap, ketyapman) kontekstga qarab to'g'ri o'giriladi.
+- **🔄 Reply Translation:** Javob berilgan xabarlar (quotes) ham avtomatik tarjima qilinadi.
 
-AI Engine: Python (FastAPI), Cerebras SDK, Llama 3.1-8B
+## 🛠️ Texnologiyalar
 
-Database: SQLite (Kesh uchun)
+- **Frontend:** React.js (Vite), Tailwind CSS
+- **Backend:** Node.js, Express, Socket.io
+- **AI Service:** Python, FastAPI, Cerebras SDK
+- **Database:** SQLite(Caching layer)
 
-✨ Aqlli Funksiyalar
-Emoji Protection: Emojilar tarjima qilinmaydi va o'z joyida qoladi.
-
-Name Transliteration: Ismlar tarjima qilinmaydi, lekin maqsadli til alifbosiga o'giriladi (masalan: Komilon -> Комилон).
-
-Slang Support: Chatdagi norasmiy so'zlar (nima gap, uzbekmisiz, sps) ma'nosi bo'yicha tarjima qilinadi.
-
-Infinite Scroll Prefetch: Foydalanuvchi tepaga skroll qilishidan oldin, fon rejimida eski xabarlar 30 tadan paketlab tarjima qilib qo'yiladi.
-
-📝 Eslatma
-Agar tarjima bazada noto'g'ri saqlanib qolgan bo'lsa, python-translate/translations_cache.db faylini o'chirib yuboring va serverni qayta yoqing. Tizim avtomatik ravishda toza bazani yaratadi.
+## 📝 Eslatma
+Agar noto'g'ri tarjima saqlanib qolsa, python-translate/translations_cache.db faylini o'chirib yuboring va serverni qayta yoqing. Tizim avtomatik tarzda toza bazani yaratadi.
