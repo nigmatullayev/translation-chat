@@ -8,7 +8,6 @@ Ushbu loyiha ikki foydalanuvchi o'rtasida real vaqt rejimida ishlaydigan, avtoma
 
 Loyiha arxitekturasi murakkab bo'lishiga qaramay, uni ishga tushirish uchun bitta Automation Script tayyorlangan.
 
-
 ```mermaid
 graph TD
     A[React Frontend] <-->|WebSocket| B(Node.js Server)
@@ -30,16 +29,16 @@ Loyiha arxitekturasi murakkab bo'lishiga qaramay, uni ishga tushirish uchun bitt
 
 ### 1-qadam: Sozlamalar 🐍
 
-   python-translate papkasida .env faylini yarating va API kalitingizni kiriting:
-    ```bash
-    CEREBRAS_API_KEY=sk-sizning-api-kalitingiz
-    ```
+python-translate papkasida .env faylini yarating va API kalitingizni kiriting:
+```bash
+CEREBRAS_API_KEY=sk-sizning-api-kalitingiz
+```
 
 ### 2-qadam: Hammasini bittada ishga tushirish ⚡
 Loyihaning ildiz (root) papkasida terminalni oching va quyidagi buyruqni bering:
-    ```bash
-    python run.py
-    ```
+```bash
+python run.py
+```
 Ushbu script virtual muhitni yaratadi, kutubxonalarni o'rnatadi va Frontend hamda Backend terminallarini avtomatik tarzda yangi oynalarda ochib beradi.
 
 ## 🛠️ Aqlli Funksiyalar
